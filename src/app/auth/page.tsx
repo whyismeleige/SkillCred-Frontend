@@ -88,7 +88,7 @@ const SignInForm: React.FC<{
         <Input
           id="signin-email"
           type="email"
-          placeholder="name@example.com"
+          placeholder="name@skillcred.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -268,7 +268,7 @@ const SignUpForm: React.FC<{
         <Input
           id="signup-name"
           type="text"
-          placeholder="John Doe"
+          placeholder="Skill Cred"
           value={formData.name}
           onChange={handleChange}
           required
@@ -313,7 +313,7 @@ const SignUpForm: React.FC<{
         <Input
           id="signup-email"
           type="email"
-          placeholder="name@example.com"
+          placeholder="name@skillcred.com"
           value={formData.email}
           onChange={handleChange}
           required

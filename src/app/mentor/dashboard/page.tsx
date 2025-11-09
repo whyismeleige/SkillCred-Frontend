@@ -149,8 +149,8 @@ const MentorDashboardPage = () => {
   }, [mounted]);
 
   const [mentorProfile, setMentorProfile] = useState<MentorProfile>({
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@email.com',
+    name: 'Piyush Bobby',
+    email: 'skillcred@email.com',
     title: 'Senior Full-Stack Developer & Mentor',
     bio: 'Experienced full-stack developer with 10+ years in the industry. Passionate about mentoring junior developers and helping them grow their careers. Specialized in React, Node.js, and scalable system design.',
     avatar: '👩‍💼',
@@ -168,8 +168,8 @@ const MentorDashboardPage = () => {
       'Docker',
     ],
     socialLinks: {
-      github: 'https://github.com/sarahjohnson',
-      linkedin: 'https://linkedin.com/in/sarahjohnson',
+      github: 'https://github.com/noturbob',
+      linkedin: 'https://linkedin.com/in/piyush-jain',
       website: 'https://sarahjohnson.dev',
     },
     certificates: [
