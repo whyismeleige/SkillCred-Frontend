@@ -239,17 +239,17 @@ const AuthPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold tracking-tight mb-2">Welcome</h1>
-          <p className="text-muted-foreground">Sign in to continue to your account</p>
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">Welcome</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Sign in to continue to your account</p>
         </div>
 
         <Card className="border-2">
           <CardHeader>
-            <CardTitle className="text-2xl text-center">
+            <CardTitle className="text-xl sm:text-2xl text-center">
               {authMode === 'signin' ? 'Sign In' : 'Sign Up'}
             </CardTitle>
-            <CardDescription className="text-center">
+            <CardDescription className="text-center text-xs sm:text-sm">
               {authMode === 'signin'
                 ? `Enter your credentials to access your account`
                 : `Create a new account to get started`}
@@ -258,8 +258,8 @@ const AuthPage = () => {
           <CardContent>
             <Tabs value={authMode} onValueChange={(v) => setAuthMode(v as 'signin' | 'signup')}>
               <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                <TabsTrigger value="signin" className="text-xs sm:text-sm">Sign In</TabsTrigger>
+                <TabsTrigger value="signup" className="text-xs sm:text-sm">Sign Up</TabsTrigger>
               </TabsList>
 
               <TabsContent value="signin">
