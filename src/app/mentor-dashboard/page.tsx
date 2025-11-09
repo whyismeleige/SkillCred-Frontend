@@ -39,6 +39,8 @@ import {
   Star,
   Clock,
   MessageSquare,
+  Send,
+  ThumbsUp,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -61,6 +63,7 @@ interface MentorProfile {
   certificates: Certificate[];
   reviews: Review[];
   mentees: Mentee[];
+  qnas: QandA[];
   stats: {
     totalMentees: number;
     totalSessions: number;
@@ -96,7 +99,19 @@ interface Mentee {
   avatar: string;
 }
 
-type TabType = 'overview' | 'mentees' | 'certificates' | 'reviews';
+interface QandA {
+  id: number;
+  studentName: string;
+  studentAvatar: string;
+  question: string;
+  answer?: string;
+  isAnswered: boolean;
+  askedDate: string;
+  answeredDate?: string;
+  likes: number;
+}
+
+type TabType = 'overview' | 'mentees' | 'certificates' | 'qna';
 type EditMode = 'profile' | 'skills' | 'socials' | null;
 
 const MentorDashboardPage = () => {
@@ -104,6 +119,7 @@ const MentorDashboardPage = () => {
   const [scrolled, setScrolled] = useState(false);
   const [editMode, setEditMode] = useState<EditMode>(null);
   const [newSkill, setNewSkill] = useState('');
+  const [answerText, setAnswerText] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -224,6 +240,51 @@ const MentorDashboardPage = () => {
         avatar: '👩‍💼',
       },
     ],
+    qnas: [
+      {
+        id: 1,
+        studentName: 'Alex Chen',
+        studentAvatar: '👨‍💻',
+        question: 'What are the best practices for implementing authentication in Node.js?',
+        answer: 'For Node.js authentication, I recommend using JWT (JSON Web Tokens) with secure libraries like jsonwebtoken. Always hash passwords with bcrypt, validate input, and use HTTPS. Consider using passport.js for OAuth integration.',
+        isAnswered: true,
+        askedDate: 'Nov 18, 2024',
+        answeredDate: 'Nov 19, 2024',
+        likes: 12,
+      },
+      {
+        id: 2,
+        studentName: 'Maria Garcia',
+        studentAvatar: '👩‍💻',
+        question: 'How do I optimize database queries for better performance?',
+        answer: 'Key optimization techniques: use indexes on frequently queried columns, avoid N+1 queries with proper joins, implement caching strategies, and profile your queries. Consider using query analyzers to identify bottlenecks.',
+        isAnswered: true,
+        askedDate: 'Nov 17, 2024',
+        answeredDate: 'Nov 17, 2024',
+        likes: 8,
+      },
+      {
+        id: 3,
+        studentName: 'James Wilson',
+        studentAvatar: '👨‍💼',
+        question: 'What\'s the difference between microservices and monolithic architecture?',
+        answer: '',
+        isAnswered: false,
+        askedDate: 'Nov 20, 2024',
+        likes: 3,
+      },
+      {
+        id: 4,
+        studentName: 'Lisa Chen',
+        studentAvatar: '👩‍💼',
+        question: 'How can I improve my system design interview skills?',
+        answer: 'Practice with real-world scenarios, focus on scalability and trade-offs, and communicate your thinking clearly. Study distributed systems concepts, practice time management, and review popular system design patterns.',
+        isAnswered: true,
+        askedDate: 'Nov 15, 2024',
+        answeredDate: 'Nov 16, 2024',
+        likes: 15,
+      },
+    ],
     stats: {
       totalMentees: 4,
       totalSessions: 63,
@@ -328,6 +389,38 @@ const MentorDashboardPage = () => {
     );
   };
 
+  const handleAnswerQuestion = (qnaId: number) => {
+    if (!answerText.trim()) return;
+
+    setMentorProfile(prev => ({
+      ...prev,
+      qnas: prev.qnas.map(q =>
+        q.id === qnaId
+          ? {
+              ...q,
+              answer: answerText,
+              isAnswered: true,
+              answeredDate: new Date().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+              }),
+            }
+          : q
+      ),
+    }));
+    setAnswerText('');
+  };
+
+  const handleLikeAnswer = (qnaId: number) => {
+    setMentorProfile(prev => ({
+      ...prev,
+      qnas: prev.qnas.map(q =>
+        q.id === qnaId ? { ...q, likes: q.likes + 1 } : q
+      ),
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
       {/* Floating Navigation Bar */}
@@ -355,7 +448,7 @@ const MentorDashboardPage = () => {
                 { id: 'overview', label: 'Overview', icon: '📊' },
                 { id: 'mentees', label: 'Mentees', icon: '👥' },
                 { id: 'certificates', label: 'Certificates', icon: '🏆' },
-                { id: 'reviews', label: 'Reviews', icon: '⭐' },
+                { id: 'qna', label: 'Q&A', icon: '❓' },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -709,64 +802,131 @@ const MentorDashboardPage = () => {
             </div>
           )}
 
-          {/* Reviews Tab */}
-          {activeTab === 'reviews' && (
+          {/* Q&A Tab */}
+          {activeTab === 'qna' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-3xl font-bold">Student Reviews</h2>
-                  <p className="text-muted-foreground mt-1">
-                    Feedback from your mentees
-                  </p>
-                </div>
-                <Card className="border-2 px-6 py-3">
-                  <p className="text-sm text-muted-foreground">Average Rating</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-3xl font-bold text-primary">{getAverageRating()}</span>
-                    <div className="flex">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-5 w-5 ${
-                            i < Math.floor(Number(getAverageRating()))
-                              ? 'fill-yellow-400 text-yellow-400'
-                              : 'text-gray-300'
-                          }`}
-                        />
-                      ))}
+              <div>
+                <h2 className="text-3xl font-bold">Student Questions & Answers</h2>
+                <p className="text-muted-foreground mt-1">
+                  Manage questions from your mentees and provide expert answers
+                </p>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-4">
+                <Card className="border-2">
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <p className="text-3xl font-bold text-primary">
+                        {mentorProfile.qnas.filter(q => q.isAnswered).length}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Answered</p>
                     </div>
-                  </div>
+                  </CardContent>
+                </Card>
+                <Card className="border-2">
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <p className="text-3xl font-bold text-orange-500">
+                        {mentorProfile.qnas.filter(q => !q.isAnswered).length}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Pending</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="border-2">
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <p className="text-3xl font-bold text-green-600">
+                        {mentorProfile.qnas.reduce((acc, q) => acc + q.likes, 0)}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Total Likes</p>
+                    </div>
+                  </CardContent>
                 </Card>
               </div>
 
+              {/* Questions List */}
               <div className="space-y-4">
-                {mentorProfile.reviews.map((review) => (
-                  <Card key={review.id} className="border-2 hover:shadow-lg transition-shadow">
+                {mentorProfile.qnas.map((qna) => (
+                  <Card key={qna.id} className="border-2 hover:shadow-lg transition-shadow">
                     <CardContent className="pt-6">
+                      {/* Question Header */}
                       <div className="flex items-start gap-4 mb-4">
-                        <span className="text-4xl">{review.avatar}</span>
+                        <span className="text-3xl">{qna.studentAvatar}</span>
                         <div className="flex-1">
-                          <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-semibold">{review.menteeeName}</h3>
-                            <p className="text-xs text-muted-foreground">{review.date}</p>
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <div>
+                              <p className="font-semibold">{qna.studentName}</p>
+                              <p className="text-xs text-muted-foreground">
+                                Asked {qna.askedDate}
+                              </p>
+                            </div>
+                            <Badge
+                              variant={qna.isAnswered ? 'default' : 'outline'}
+                              className={
+                                qna.isAnswered
+                                  ? 'bg-green-600 hover:bg-green-700'
+                                  : 'bg-orange-100 text-orange-700 border-orange-300 hover:bg-orange-100'
+                              }
+                            >
+                              {qna.isAnswered ? 'Answered' : 'Pending'}
+                            </Badge>
                           </div>
-                          <div className="flex gap-0.5 mb-3">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`h-4 w-4 ${
-                                  i < review.rating
-                                    ? 'fill-yellow-400 text-yellow-400'
-                                    : 'text-gray-300'
-                                }`}
-                              />
-                            ))}
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {review.comment}
-                          </p>
+                          <p className="font-medium text-base mb-3">{qna.question}</p>
                         </div>
                       </div>
+
+                      {/* Answer Section */}
+                      {qna.isAnswered ? (
+                        <div className="bg-muted/50 rounded-lg p-4 mb-4 space-y-3">
+                          <div>
+                            <p className="text-xs font-semibold text-primary mb-2">Your Answer</p>
+                            <p className="text-sm text-foreground">{qna.answer}</p>
+                          </div>
+                          <div className="flex items-center justify-between pt-3 border-t">
+                            <p className="text-xs text-muted-foreground">
+                              Answered {qna.answeredDate}
+                            </p>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleLikeAnswer(qna.id)}
+                              className="text-xs"
+                            >
+                              <ThumbsUp className="h-3 w-3 mr-1" />
+                              {qna.likes}
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-3 mb-4">
+                          <Textarea
+                            placeholder="Type your answer here..."
+                            value={answerText}
+                            onChange={(e) => setAnswerText(e.target.value)}
+                            rows={3}
+                            className="text-sm"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleAnswerQuestion(qna.id)}
+                              disabled={!answerText.trim()}
+                            >
+                              <Send className="h-3 w-3 mr-2" />
+                              Post Answer
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setAnswerText('')}
+                            >
+                              Clear
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
