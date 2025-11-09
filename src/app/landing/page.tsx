@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { motion, useScroll, useTransform, AnimatePresence, Variants } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { ThemeToggle } from '@/components/theme-toggle';
 import {
   Menu,
   X,
@@ -21,12 +23,16 @@ import {
   Phone,
   MapPin,
   ChevronDown,
+  Rocket,
 } from 'lucide-react';
 import Link from 'next/link';
 
 const LandingPage: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
+  const { scrollYProgress } = useScroll();
+  const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.8]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -61,21 +67,99 @@ const LandingPage: React.FC = () => {
     setIsMenuOpen(false);
   };
 
+  // Properly typed variants
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.3,
+      },
+    },
+  };
+
+  const itemVariants: Variants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: 'spring',
+        stiffness: 100,
+      },
+    },
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <motion.div
+        className="absolute top-0 left-0 w-full h-full pointer-events-none"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1 }}
+      >
+        <motion.div
+          className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.2, 1],
+            x: [0, 50, 0],
+            y: [0, 30, 0],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute bottom-20 right-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl"
+          animate={{
+            scale: [1.2, 1, 1.2],
+            x: [0, -30, 0],
+            y: [0, 50, 0],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      </motion.div>
+
       {/* Floating Navbar */}
-      <nav className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-[95%] max-w-6xl">
-        <div className="bg-card/95 backdrop-blur-md border-2 border-border rounded-full shadow-lg px-6 py-3">
+      <motion.nav
+        className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-[95%] max-w-6xl"
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, type: 'spring', stiffness: 100 }}
+      >
+        <motion.div
+          className="bg-card/95 backdrop-blur-md border-2 border-border rounded-full shadow-lg px-6 py-3"
+          whileHover={{ boxShadow: '0 20px 50px rgba(0,0,0,0.1)' }}
+        >
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Sparkles className="h-6 w-6 text-primary" />
-              <span className="font-bold text-xl">MentorHub</span>
-            </div>
+            <motion.div
+              className="flex items-center space-x-2"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+              >
+                <Sparkles className="h-6 w-6 text-primary" />
+              </motion.div>
+              <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/50">
+                MentorHub
+              </span>
+            </motion.div>
 
             {/* Desktop Menu */}
             <div className="hidden md:flex items-center space-x-1">
               {['home', 'features', 'testimonials', 'faq', 'blog', 'contact'].map((item) => (
-                <button
+                <motion.button
                   key={item}
                   onClick={() => scrollToSection(item)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
@@ -83,322 +167,537 @@ const LandingPage: React.FC = () => {
                       ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                   }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   {item.charAt(0).toUpperCase() + item.slice(1)}
-                </button>
+                </motion.button>
               ))}
             </div>
 
             <div className="hidden md:flex items-center space-x-2">
+              <ThemeToggle />
               <Link href="/auth">
-                <Button size="sm" className="rounded-full">
-                  Get Started
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button size="sm" className="rounded-full">
+                    Get Started
+                  </Button>
+                </motion.div>
               </Link>
             </div>
 
             {/* Mobile Menu Button */}
-            <button
-              className="md:hidden"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X /> : <Menu />}
-            </button>
+            <div className="md:hidden flex items-center gap-2">
+              <ThemeToggle />
+              <motion.button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                whileTap={{ scale: 0.9 }}
+              >
+                {isMenuOpen ? <X /> : <Menu />}
+              </motion.button>
+            </div>
           </div>
 
           {/* Mobile Menu */}
-          {isMenuOpen && (
-            <div className="md:hidden mt-4 pt-4 border-t border-border">
-              <div className="flex flex-col space-y-2">
-                {['home', 'features', 'testimonials', 'faq', 'blog', 'contact'].map((item) => (
-                  <button
-                    key={item}
-                    onClick={() => scrollToSection(item)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium text-left ${
-                      activeSection === item
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:bg-accent'
-                    }`}
-                  >
-                    {item.charAt(0).toUpperCase() + item.slice(1)}
-                  </button>
-                ))}
-                <Link href="/auth" className="mt-2">
-                  <Button size="sm" className="w-full rounded-full">
-                    Get Started
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          )}
-        </div>
-      </nav>
+          <AnimatePresence>
+            {isMenuOpen && (
+              <motion.div
+                className="md:hidden mt-4 pt-4 border-t border-border"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="flex flex-col space-y-2">
+                  {['home', 'features', 'testimonials', 'faq', 'blog', 'contact'].map((item, index) => (
+                    <motion.button
+                      key={item}
+                      onClick={() => scrollToSection(item)}
+                      className={`px-4 py-2 rounded-full text-sm font-medium text-left ${
+                        activeSection === item
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-muted-foreground hover:bg-accent'
+                      }`}
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: index * 0.1 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {item.charAt(0).toUpperCase() + item.slice(1)}
+                    </motion.button>
+                  ))}
+                  <Link href="/auth" className="mt-2">
+                    <motion.div whileTap={{ scale: 0.95 }}>
+                      <Button size="sm" className="w-full rounded-full">
+                        Get Started
+                      </Button>
+                    </motion.div>
+                  </Link>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </motion.nav>
 
       {/* Hero Section */}
-      <section id="home" className="pt-32 pb-20 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="inline-block mb-4 px-4 py-2 bg-primary/10 rounded-full">
-            <span className="text-primary font-semibold text-sm">
-              🚀 Connect with Expert Mentors
+      <section id="home" className="pt-32 pb-20 px-4 relative">
+        <motion.div
+          className="max-w-6xl mx-auto text-center"
+          style={{ opacity, scale }}
+        >
+          <motion.div
+            className="inline-block mb-4 px-4 py-2 bg-primary/10 rounded-full"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, type: 'spring' }}
+          >
+            <span className="text-primary font-semibold text-sm flex items-center gap-2">
+              <Rocket className="h-4 w-4" />
+              Connect with Expert Mentors
             </span>
-          </div>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">
+          </motion.div>
+
+          <motion.h1
+            className="text-5xl md:text-7xl font-bold tracking-tight mb-6"
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
             Grow Your Career with
-            <span className="text-primary"> Expert Guidance</span>
-          </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            <motion.span
+              className="text-primary block"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+            >
+              Expert Guidance
+            </motion.span>
+          </motion.h1>
+
+          <motion.p
+            className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto"
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.7 }}
+          >
             Join thousands of professionals connecting with mentors who can help you
             achieve your goals and unlock your potential.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          </motion.p>
+
+          <motion.div
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.9 }}
+          >
             <Link href="/auth">
-              <Button size="lg" className="rounded-full">
-                Find Your Mentor
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button size="lg" className="rounded-full group">
+                  Find Your Mentor
+                  <motion.div
+                    className="ml-2"
+                    animate={{ x: [0, 5, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                  </motion.div>
+                </Button>
+              </motion.div>
             </Link>
-            <Button
-              size="lg"
-              variant="outline"
-              className="rounded-full"
-              onClick={() => scrollToSection('features')}
-            >
-              Learn More
-            </Button>
-          </div>
-          <div className="mt-16 animate-bounce">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                size="lg"
+                variant="outline"
+                className="rounded-full"
+                onClick={() => scrollToSection('features')}
+              >
+                Learn More
+              </Button>
+            </motion.div>
+          </motion.div>
+
+          <motion.div
+            className="mt-16"
+            animate={{ y: [0, 10, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          >
             <ChevronDown className="h-8 w-8 mx-auto text-muted-foreground" />
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* Features Section */}
       <section id="features" className="py-20 px-4 bg-muted/50">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6 }}
+          >
             <h2 className="text-4xl font-bold mb-4">Why Choose MentorHub?</h2>
             <p className="text-muted-foreground text-lg">
               Everything you need to accelerate your professional growth
             </p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          </motion.div>
+
+          <motion.div
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+          >
             {features.map((feature, index) => (
-              <Card key={index} className="border-2 hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    {feature.icon}
-                  </div>
-                  <CardTitle>{feature.title}</CardTitle>
-                  <CardDescription>{feature.description}</CardDescription>
-                </CardHeader>
-              </Card>
+              <motion.div
+                key={index}
+                variants={itemVariants}
+                whileHover={{ y: -10, transition: { duration: 0.2 } }}
+              >
+                <Card className="border-2 hover:shadow-lg transition-all h-full">
+                  <CardHeader>
+                    <motion.div
+                      className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4"
+                      whileHover={{ rotate: 360, scale: 1.1 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      {feature.icon}
+                    </motion.div>
+                    <CardTitle>{feature.title}</CardTitle>
+                    <CardDescription>{feature.description}</CardDescription>
+                  </CardHeader>
+                </Card>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Testimonials Section */}
       <section id="testimonials" className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
             <h2 className="text-4xl font-bold mb-4">What Our Users Say</h2>
             <p className="text-muted-foreground text-lg">
               Real stories from real people who transformed their careers
             </p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6">
+          </motion.div>
+
+          <motion.div
+            className="grid md:grid-cols-3 gap-6"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+          >
             {testimonials.map((testimonial, index) => (
-              <Card key={index} className="border-2 hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <Quote className="h-8 w-8 text-primary mb-4" />
-                  <CardDescription className="text-base">
-                    {testimonial.quote}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center space-x-4">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
-                      {testimonial.name.charAt(0)}
+              <motion.div
+                key={index}
+                variants={itemVariants}
+                whileHover={{ y: -10, transition: { duration: 0.2 } }}
+              >
+                <Card className="border-2 hover:shadow-lg transition-all h-full">
+                  <CardHeader>
+                    <motion.div
+                      whileHover={{ rotate: 15, scale: 1.1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Quote className="h-8 w-8 text-primary mb-4" />
+                    </motion.div>
+                    <CardDescription className="text-base">
+                      {testimonial.quote}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center space-x-4">
+                      <motion.div
+                        className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary"
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                      >
+                        {testimonial.name.charAt(0)}
+                      </motion.div>
+                      <div>
+                        <p className="font-semibold">{testimonial.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {testimonial.role}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold">{testimonial.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {testimonial.role}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* FAQ Section */}
       <section id="faq" className="py-20 px-4 bg-muted/50">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
             <h2 className="text-4xl font-bold mb-4">Frequently Asked Questions</h2>
             <p className="text-muted-foreground text-lg">
               Got questions? We've got answers
             </p>
-          </div>
-          <div className="space-y-4">
+          </motion.div>
+
+          <motion.div
+            className="space-y-4"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+          >
             {faqs.map((faq, index) => (
-              <Card key={index} className="border-2">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-start">
-                    <CheckCircle className="h-5 w-5 text-primary mr-2 mt-1 flex-shrink-0" />
-                    {faq.question}
-                  </CardTitle>
-                  <CardDescription className="ml-7">{faq.answer}</CardDescription>
-                </CardHeader>
-              </Card>
+              <motion.div
+                key={index}
+                variants={itemVariants}
+                whileHover={{ x: 5 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Card className="border-2 hover:shadow-md transition-all">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-start">
+                      <motion.div
+                        whileHover={{ scale: 1.2, rotate: 360 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <CheckCircle className="h-5 w-5 text-primary mr-2 mt-1 flex-shrink-0" />
+                      </motion.div>
+                      {faq.question}
+                    </CardTitle>
+                    <CardDescription className="ml-7">{faq.answer}</CardDescription>
+                  </CardHeader>
+                </Card>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Blog Section */}
       <section id="blog" className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
             <h2 className="text-4xl font-bold mb-4">Latest from Our Blog</h2>
             <p className="text-muted-foreground text-lg">
               Tips, insights, and stories to help you grow
             </p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6">
+          </motion.div>
+
+          <motion.div
+            className="grid md:grid-cols-3 gap-6"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+          >
             {blogPosts.map((post, index) => (
-              <Card key={index} className="border-2 hover:shadow-lg transition-shadow overflow-hidden">
-                <div className="h-48 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                  {post.icon}
-                </div>
-                <CardHeader>
-                  <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>{post.date}</span>
-                  </div>
-                  <CardTitle className="text-xl">{post.title}</CardTitle>
-                  <CardDescription>{post.excerpt}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button variant="link" className="px-0">
-                    Read More <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </CardContent>
-              </Card>
+              <motion.div
+                key={index}
+                variants={itemVariants}
+                whileHover={{ y: -10, transition: { duration: 0.2 } }}
+              >
+                <Card className="border-2 hover:shadow-lg transition-all overflow-hidden h-full">
+                  <motion.div
+                    className="h-48 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center"
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <motion.div
+                      whileHover={{ rotate: 360, scale: 1.2 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      {post.icon}
+                    </motion.div>
+                  </motion.div>
+                  <CardHeader>
+                    <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-2">
+                      <Calendar className="h-4 w-4" />
+                      <span>{post.date}</span>
+                    </div>
+                    <CardTitle className="text-xl">{post.title}</CardTitle>
+                    <CardDescription>{post.excerpt}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <motion.div whileHover={{ x: 5 }} transition={{ duration: 0.2 }}>
+                      <button className="px-0 h-auto font-normal text-primary hover:text-primary/80 flex items-center">
+                        Read More <ArrowRight className="ml-2 h-4 w-4" />
+                      </button>
+                    </motion.div>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Contact Section */}
       <section id="contact" className="py-20 px-4 bg-muted/50">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
             <h2 className="text-4xl font-bold mb-4">Get In Touch</h2>
             <p className="text-muted-foreground text-lg">
               Have questions? We'd love to hear from you
             </p>
-          </div>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <Card className="border-2">
-                <CardHeader>
-                  <div className="flex items-center space-x-4">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Mail className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">Email</CardTitle>
-                      <CardDescription>support@mentorhub.com</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-              <Card className="border-2">
-                <CardHeader>
-                  <div className="flex items-center space-x-4">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Phone className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">Phone</CardTitle>
-                      <CardDescription>+1 (555) 123-4567</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-              <Card className="border-2">
-                <CardHeader>
-                  <div className="flex items-center space-x-4">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <MapPin className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">Office</CardTitle>
-                      <CardDescription>
-                        123 Mentor Street, SF, CA 94102
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-            </div>
+          </motion.div>
 
-            <Card className="border-2">
-              <CardHeader>
-                <CardTitle>Send us a message</CardTitle>
-                <CardDescription>
-                  Fill out the form and we'll get back to you within 24 hours
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
-                    <Input id="name" placeholder="Your name" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" placeholder="your@email.com" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="message">Message</Label>
-                    <Textarea
-                      id="message"
-                      placeholder="Tell us how we can help..."
-                      rows={4}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full">
-                    Send Message
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
+          <motion.div
+            className="grid md:grid-cols-2 gap-8"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+          >
+            <motion.div className="space-y-6" variants={itemVariants}>
+              {[
+                { icon: Mail, title: 'Email', description: 'support@mentorhub.com' },
+                { icon: Phone, title: 'Phone', description: '+1 (555) 123-4567' },
+                { icon: MapPin, title: 'Office', description: '123 Mentor Street, SF, CA 94102' },
+              ].map((contact, index) => (
+                <motion.div
+                  key={index}
+                  whileHover={{ x: 5, scale: 1.02 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Card className="border-2 hover:shadow-md transition-all">
+                    <CardHeader>
+                      <div className="flex items-center space-x-4">
+                        <motion.div
+                          className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center"
+                          whileHover={{ rotate: 360, scale: 1.1 }}
+                          transition={{ duration: 0.5 }}
+                        >
+                          <contact.icon className="h-6 w-6 text-primary" />
+                        </motion.div>
+                        <div>
+                          <CardTitle className="text-lg">{contact.title}</CardTitle>
+                          <CardDescription>{contact.description}</CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                  </Card>
+                </motion.div>
+              ))}
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+              <Card className="border-2">
+                <CardHeader>
+                  <CardTitle>Send us a message</CardTitle>
+                  <CardDescription>
+                    Fill out the form and we'll get back to you within 24 hours
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form className="space-y-4">
+                    <motion.div
+                      className="space-y-2"
+                      whileHover={{ scale: 1.02 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Label htmlFor="name">Name</Label>
+                      <Input id="name" placeholder="Your name" className="transition-all focus:scale-[1.01]" />
+                    </motion.div>
+                    <motion.div
+                      className="space-y-2"
+                      whileHover={{ scale: 1.02 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Label htmlFor="email">Email</Label>
+                      <Input id="email" type="email" placeholder="your@email.com" className="transition-all focus:scale-[1.01]" />
+                    </motion.div>
+                    <motion.div
+                      className="space-y-2"
+                      whileHover={{ scale: 1.02 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Label htmlFor="message">Message</Label>
+                      <Textarea
+                        id="message"
+                        placeholder="Tell us how we can help..."
+                        rows={4}
+                        className="transition-all focus:scale-[1.01]"
+                      />
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button type="submit" className="w-full">
+                        Send Message
+                      </Button>
+                    </motion.div>
+                  </form>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 border-t border-border">
+      <motion.footer
+        className="py-12 px-4 border-t border-border"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+      >
         <div className="max-w-6xl mx-auto text-center text-muted-foreground">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <Sparkles className="h-6 w-6 text-primary" />
+          <motion.div
+            className="flex items-center justify-center space-x-2 mb-4"
+            whileHover={{ scale: 1.05 }}
+          >
+            <motion.div
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+            >
+              <Sparkles className="h-6 w-6 text-primary" />
+            </motion.div>
             <span className="font-bold text-xl text-foreground">MentorHub</span>
-          </div>
+          </motion.div>
           <p className="mb-4">
             © 2025 MentorHub. All rights reserved. Built with ❤️ for growth.
           </p>
           <div className="flex justify-center space-x-6">
-            <button className="hover:text-primary transition-colors">Privacy</button>
-            <button className="hover:text-primary transition-colors">Terms</button>
-            <button className="hover:text-primary transition-colors">About</button>
+            {['Privacy', 'Terms', 'About'].map((item) => (
+              <motion.button
+                key={item}
+                className="hover:text-primary transition-colors"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {item}
+              </motion.button>
+            ))}
           </div>
         </div>
-      </footer>
+      </motion.footer>
     </div>
   );
 };

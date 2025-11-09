@@ -29,83 +29,84 @@ interface Question {
   explanation: string;
 }
 
+const questions: Question[] = [
+  {
+    id: 1,
+    type: 'mcq',
+    question: 'What is the primary purpose of the useEffect hook in React?',
+    options: [
+      'To manage component state',
+      'To perform side effects after render',
+      'To handle form submissions',
+      'To create context providers',
+    ],
+    correctAnswer: 1,
+    explanation: 'useEffect is used to perform side effects after the component renders, such as API calls or subscriptions.',
+  },
+  {
+    id: 2,
+    type: 'true-false',
+    question: 'Dependencies in useEffect determine when the effect runs.',
+    options: ['True', 'False'],
+    correctAnswer: 0,
+    explanation: 'Correct! The dependency array in useEffect controls when the effect is executed.',
+  },
+  {
+    id: 3,
+    type: 'mcq',
+    question: 'What does an empty dependency array [] in useEffect mean?',
+    options: [
+      'Run on every render',
+      'Run only on mount and unmount',
+      'Never run',
+      'Run on dependency change',
+    ],
+    correctAnswer: 1,
+    explanation: 'An empty dependency array means the effect runs only once after the initial render.',
+  },
+  {
+    id: 4,
+    type: 'true-false',
+    question: 'You can have multiple useEffect hooks in a single component.',
+    options: ['True', 'False'],
+    correctAnswer: 0,
+    explanation: 'True! React allows multiple useEffect hooks in a component for better organization.',
+  },
+  {
+    id: 5,
+    type: 'mcq',
+    question: 'How do you clean up side effects in useEffect?',
+    options: [
+      'By returning null',
+      'By returning undefined',
+      'By returning a cleanup function',
+      'Side effects cannot be cleaned up',
+    ],
+    correctAnswer: 2,
+    explanation: 'You can return a cleanup function from useEffect to handle cleanup operations.',
+  },
+  {
+    id: 6,
+    type: 'true-false',
+    question: 'useEffect runs before the component renders.',
+    options: ['True', 'False'],
+    correctAnswer: 1,
+    explanation: 'False! useEffect runs after the component renders, not before.',
+  },
+];
+
 const QuizAssessmentPage = () => {
   const [mounted, setMounted] = useState(false);
-  const [showStartDialog, setShowStartDialog] = useState(true);
+  const [showStartDialog, setShowStartDialog] = useState(false);
   const [quizStarted, setQuizStarted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(20 * 60);
-  const [answers, setAnswers] = useState<(number | null)[]>([]);
+  const [answers, setAnswers] = useState<(number | null)[]>(new Array(questions.length).fill(null));
   const [showResults, setShowResults] = useState(false);
 
-  const questions: Question[] = [
-    {
-      id: 1,
-      type: 'mcq',
-      question: 'What is the primary purpose of the useEffect hook in React?',
-      options: [
-        'To manage component state',
-        'To perform side effects after render',
-        'To handle form submissions',
-        'To create context providers',
-      ],
-      correctAnswer: 1,
-      explanation: 'useEffect is used to perform side effects after the component renders, such as API calls or subscriptions.',
-    },
-    {
-      id: 2,
-      type: 'true-false',
-      question: 'Dependencies in useEffect determine when the effect runs.',
-      options: ['True', 'False'],
-      correctAnswer: 0,
-      explanation: 'Correct! The dependency array in useEffect controls when the effect is executed.',
-    },
-    {
-      id: 3,
-      type: 'mcq',
-      question: 'What does an empty dependency array [] in useEffect mean?',
-      options: [
-        'Run on every render',
-        'Run only on mount and unmount',
-        'Never run',
-        'Run on dependency change',
-      ],
-      correctAnswer: 1,
-      explanation: 'An empty dependency array means the effect runs only once after the initial render.',
-    },
-    {
-      id: 4,
-      type: 'true-false',
-      question: 'You can have multiple useEffect hooks in a single component.',
-      options: ['True', 'False'],
-      correctAnswer: 0,
-      explanation: 'True! React allows multiple useEffect hooks in a component for better organization.',
-    },
-    {
-      id: 5,
-      type: 'mcq',
-      question: 'How do you clean up side effects in useEffect?',
-      options: [
-        'By returning null',
-        'By returning undefined',
-        'By returning a cleanup function',
-        'Side effects cannot be cleaned up',
-      ],
-      correctAnswer: 2,
-      explanation: 'You can return a cleanup function from useEffect to handle cleanup operations.',
-    },
-    {
-      id: 6,
-      type: 'true-false',
-      question: 'useEffect runs before the component renders.',
-      options: ['True', 'False'],
-      correctAnswer: 1,
-      explanation: 'False! useEffect runs after the component renders, not before.',
-    },
-  ];
-
-  // Hydration fix: Mount component on client only
+  // Hydration fix: Initialize mounted state
   useEffect(() => {
     setMounted(true);
+    setShowStartDialog(true);
   }, []);
 
   // Timer effect
@@ -124,14 +125,7 @@ const QuizAssessmentPage = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [quizStarted, timeLeft, mounted]);
-
-  // Initialize answers when quiz starts
-  useEffect(() => {
-    if (quizStarted && answers.length === 0 && mounted) {
-      setAnswers(new Array(questions.length).fill(null));
-    }
-  }, [quizStarted, mounted]);
+  }, [quizStarted, mounted, timeLeft]);
 
   const handleStartQuiz = () => {
     setShowStartDialog(false);
@@ -169,12 +163,20 @@ const QuizAssessmentPage = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Prevent hydration mismatch
   if (!mounted) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading quiz...</p>
+        </div>
+      </div>
+    );
   }
 
   const isTimeUp = timeLeft === 0;
-  const score = calculateScore();
+  const score = showResults ? calculateScore() : { correct: 0, total: 0, percentage: 0 };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted flex flex-col">
@@ -268,7 +270,7 @@ const QuizAssessmentPage = () => {
                   </CardHeader>
                   <CardContent>
                     <RadioGroup
-                      value={answers[index]?.toString() ?? ''}
+                      value={answers[index] !== null ? answers[index]!.toString() : ''}
                       onValueChange={(value) => handleAnswer(question.id, parseInt(value))}
                     >
                       <div className="space-y-3">
@@ -333,7 +335,8 @@ const QuizAssessmentPage = () => {
             <div className="space-y-4">
               <h2 className="text-2xl font-bold">Answer Review</h2>
               {questions.map((question, index) => {
-                const isCorrect = answers[index] === question.correctAnswer;
+                const userAnswer = answers[index];
+                const isCorrect = userAnswer === question.correctAnswer;
                 return (
                   <Card
                     key={question.id}
@@ -349,7 +352,7 @@ const QuizAssessmentPage = () => {
                             Q{index + 1}. {question.question}
                           </p>
                           <p className="text-sm text-muted-foreground mb-2">
-                            Your answer: {question.options[answers[index] ?? 0]}
+                            Your answer: {userAnswer !== null ? question.options[userAnswer] : 'Not answered'}
                           </p>
                           {!isCorrect && (
                             <p className="text-sm text-green-600 dark:text-green-400 mb-2">

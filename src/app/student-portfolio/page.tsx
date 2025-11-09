@@ -93,11 +93,17 @@ type TabType = 'overview' | 'tests' | 'certificates' | 'roadmaps';
 type EditMode = 'profile' | 'skills' | 'socials' | null;
 
 const StudentPortfolioPage = () => {
+  const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [scrolled, setScrolled] = useState(false);
   const [editMode, setEditMode] = useState<EditMode>(null);
   const [newSkill, setNewSkill] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Hydration fix
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -270,7 +276,6 @@ const StudentPortfolioPage = () => {
     ],
   });
 
-  // Temporary state for editing
   const [editedProfile, setEditedProfile] = useState(studentProfile);
 
   const calculateAverageScore = () => {
@@ -375,6 +380,11 @@ const StudentPortfolioPage = () => {
       </div>
     );
   };
+
+  // Prevent hydration mismatch
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
@@ -832,244 +842,250 @@ const StudentPortfolioPage = () => {
       </main>
 
       {/* Edit Profile Dialog */}
-      <Dialog open={editMode === 'profile'} onOpenChange={() => handleCancelEdit()}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Profile</DialogTitle>
-            <DialogDescription>
-              Update your profile information
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6 py-4">
-            {/* Avatar Upload Section */}
-            <div className="space-y-4">
-              <Label>Profile Picture</Label>
-              <div className="flex flex-col items-center gap-4">
-                {renderAvatar(editedProfile, 'large')}
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload Photo
-                  </Button>
-                  {editedProfile.avatarType === 'image' && (
+      {editMode === 'profile' && editedProfile && (
+        <Dialog open={editMode === 'profile'} onOpenChange={() => handleCancelEdit()}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Profile</DialogTitle>
+              <DialogDescription>
+                Update your profile information
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-6 py-4">
+              {/* Avatar Upload Section */}
+              <div className="space-y-4">
+                <Label>Profile Picture</Label>
+                <div className="flex flex-col items-center gap-4">
+                  {renderAvatar(editedProfile, 'large')}
+                  <div className="flex gap-2">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={handleRemoveAvatar}
+                      onClick={() => fileInputRef.current?.click()}
                     >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Remove
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Photo
                     </Button>
-                  )}
+                    {editedProfile.avatarType === 'image' && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleRemoveAvatar}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Upload a profile picture (JPG, PNG, max 5MB)
+                  </p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
                 </div>
-                <p className="text-xs text-muted-foreground text-center">
-                  Upload a profile picture (JPG, PNG, max 5MB)
-                </p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  value={editedProfile.name}
+                  onChange={(e) =>
+                    setEditedProfile({ ...editedProfile, name: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="title">Job Title</Label>
+                <Input
+                  id="title"
+                  value={editedProfile.title}
+                  onChange={(e) =>
+                    setEditedProfile({ ...editedProfile, title: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={editedProfile.email}
+                  onChange={(e) =>
+                    setEditedProfile({ ...editedProfile, email: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea
+                  id="bio"
+                  value={editedProfile.bio}
+                  onChange={(e) =>
+                    setEditedProfile({ ...editedProfile, bio: e.target.value })
+                  }
+                  rows={4}
                 />
               </div>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                value={editedProfile.name}
-                onChange={(e) =>
-                  setEditedProfile({ ...editedProfile, name: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="title">Job Title</Label>
-              <Input
-                id="title"
-                value={editedProfile.title}
-                onChange={(e) =>
-                  setEditedProfile({ ...editedProfile, title: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={editedProfile.email}
-                onChange={(e) =>
-                  setEditedProfile({ ...editedProfile, email: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                value={editedProfile.bio}
-                onChange={(e) =>
-                  setEditedProfile({ ...editedProfile, bio: e.target.value })
-                }
-                rows={4}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCancelEdit}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveEdit}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button variant="outline" onClick={handleCancelEdit}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEdit}>Save Changes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Edit Skills Dialog - Keep the same */}
-      <Dialog open={editMode === 'skills'} onOpenChange={() => handleCancelEdit()}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Skills</DialogTitle>
-            <DialogDescription>
-              Add or remove your technical skills
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Add New Skill</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={newSkill}
-                  onChange={(e) => setNewSkill(e.target.value)}
-                  placeholder="e.g., React, Python, AWS..."
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleAddSkill();
-                    }
-                  }}
-                />
-                <Button onClick={handleAddSkill}>
-                  <Plus className="h-4 w-4" />
-                </Button>
+      {editMode === 'skills' && editedProfile && (
+        <Dialog open={editMode === 'skills'} onOpenChange={() => handleCancelEdit()}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit Skills</DialogTitle>
+              <DialogDescription>
+                Add or remove your technical skills
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Add New Skill</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={newSkill}
+                    onChange={(e) => setNewSkill(e.target.value)}
+                    placeholder="e.g., React, Python, AWS..."
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleAddSkill();
+                      }
+                    }}
+                  />
+                  <Button onClick={handleAddSkill}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Current Skills</Label>
-              <div className="flex flex-wrap gap-2 p-4 border rounded-lg min-h-[100px]">
-                {editedProfile.skills.map((skill) => (
-                  <Badge
-                    key={skill}
-                    variant="secondary"
-                    className="px-3 py-2 text-sm flex items-center gap-2"
-                  >
-                    {skill}
-                    <button
-                      onClick={() => handleRemoveSkill(skill)}
-                      className="hover:text-destructive"
+              <div className="space-y-2">
+                <Label>Current Skills</Label>
+                <div className="flex flex-wrap gap-2 p-4 border rounded-lg min-h-[100px]">
+                  {editedProfile.skills.map((skill) => (
+                    <Badge
+                      key={skill}
+                      variant="secondary"
+                      className="px-3 py-2 text-sm flex items-center gap-2"
                     >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
+                      {skill}
+                      <button
+                        onClick={() => handleRemoveSkill(skill)}
+                        className="hover:text-destructive"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCancelEdit}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveEdit}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button variant="outline" onClick={handleCancelEdit}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEdit}>Save Changes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Edit Social Links Dialog - Keep the same */}
-      <Dialog open={editMode === 'socials'} onOpenChange={() => handleCancelEdit()}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Social Links</DialogTitle>
-            <DialogDescription>
-              Update your social media profiles
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="github">
-                <Github className="h-4 w-4 inline mr-2" />
-                GitHub Profile URL
-              </Label>
-              <Input
-                id="github"
-                value={editedProfile.socialLinks.github || ''}
-                onChange={(e) =>
-                  setEditedProfile({
-                    ...editedProfile,
-                    socialLinks: {
-                      ...editedProfile.socialLinks,
-                      github: e.target.value,
-                    },
-                  })
-                }
-                placeholder="https://github.com/username"
-              />
+      {editMode === 'socials' && editedProfile && (
+        <Dialog open={editMode === 'socials'} onOpenChange={() => handleCancelEdit()}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit Social Links</DialogTitle>
+              <DialogDescription>
+                Update your social media profiles
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="github">
+                  <Github className="h-4 w-4 inline mr-2" />
+                  GitHub Profile URL
+                </Label>
+                <Input
+                  id="github"
+                  value={editedProfile.socialLinks.github || ''}
+                  onChange={(e) =>
+                    setEditedProfile({
+                      ...editedProfile,
+                      socialLinks: {
+                        ...editedProfile.socialLinks,
+                        github: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="https://github.com/username"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="linkedin">
+                  <Linkedin className="h-4 w-4 inline mr-2" />
+                  LinkedIn Profile URL
+                </Label>
+                <Input
+                  id="linkedin"
+                  value={editedProfile.socialLinks.linkedin || ''}
+                  onChange={(e) =>
+                    setEditedProfile({
+                      ...editedProfile,
+                      socialLinks: {
+                        ...editedProfile.socialLinks,
+                        linkedin: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="https://linkedin.com/in/username"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="website">
+                  <ExternalLink className="h-4 w-4 inline mr-2" />
+                  Personal Website URL
+                </Label>
+                <Input
+                  id="website"
+                  value={editedProfile.socialLinks.website || ''}
+                  onChange={(e) =>
+                    setEditedProfile({
+                      ...editedProfile,
+                      socialLinks: {
+                        ...editedProfile.socialLinks,
+                        website: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="https://yourwebsite.com"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="linkedin">
-                <Linkedin className="h-4 w-4 inline mr-2" />
-                LinkedIn Profile URL
-              </Label>
-              <Input
-                id="linkedin"
-                value={editedProfile.socialLinks.linkedin || ''}
-                onChange={(e) =>
-                  setEditedProfile({
-                    ...editedProfile,
-                    socialLinks: {
-                      ...editedProfile.socialLinks,
-                      linkedin: e.target.value,
-                    },
-                  })
-                }
-                placeholder="https://linkedin.com/in/username"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="website">
-                <ExternalLink className="h-4 w-4 inline mr-2" />
-                Personal Website URL
-              </Label>
-              <Input
-                id="website"
-                value={editedProfile.socialLinks.website || ''}
-                onChange={(e) =>
-                  setEditedProfile({
-                    ...editedProfile,
-                    socialLinks: {
-                      ...editedProfile.socialLinks,
-                      website: e.target.value,
-                    },
-                  })
-                }
-                placeholder="https://yourwebsite.com"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCancelEdit}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveEdit}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button variant="outline" onClick={handleCancelEdit}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEdit}>Save Changes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

@@ -107,7 +107,10 @@ const PortfolioPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
-  const allSkills = useMemo(() => Array.from(new Set(mentors.flatMap((m) => m.skills))), []);
+  const allSkills = useMemo(() => 
+    Array.from(new Set(mentors.flatMap((m) => m.skills))), 
+    []
+  );
 
   const filteredMentors = useMemo(() => {
     return mentors.filter((mentor) => {
@@ -116,7 +119,8 @@ const PortfolioPage = () => {
         mentor.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         mentor.skills.some((skill) => skill.toLowerCase().includes(searchTerm.toLowerCase()));
 
-      const matchesSkill = selectedSkills.length === 0 || selectedSkills.some(skill => mentor.skills.includes(skill));
+      const matchesSkill = selectedSkills.length === 0 || 
+        selectedSkills.some(skill => mentor.skills.includes(skill));
 
       return matchesSearch && matchesSkill;
     });
